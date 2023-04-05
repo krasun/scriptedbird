@@ -12,6 +12,8 @@ const preferences = {
     scrollWaitTimeMilliseconds: 1000,
 };
 
+const visitedLinks = {};
+
 const openUnrepliedReplies = () => {
     const likeButtons = document.querySelectorAll('[data-testid=like]');
     console.log(`found ${likeButtons.length} replies with like buttons`);
@@ -30,10 +32,13 @@ const openUnrepliedReplies = () => {
                 for (const tweetLink of tweetLinks) {
                     if (tweetLink.hasChildNodes() && tweetLink.firstChild.tagName.toLowerCase() == "time") {
                         console.log(`found link to the tweet ${tweetLink.href}, opening in a new tab`);
-                        setTimeout(() => {
-                            window.open(tweetLink.href, "_blank");
-                        }, preferences.openNewWindowDelayMs * unrepliedReplies);
-                        unrepliedReplies++;
+                        if (!(tweetLink.href in visitedLinks)) {
+                            setTimeout(() => {
+                                window.open(tweetLink.href, "_blank");
+                            }, preferences.openNewWindowDelayMs * unrepliedReplies);
+                            visitedLinks[tweetLink.href] = true;
+                            unrepliedReplies++;
+                        }
                     }
                 }
 
@@ -54,11 +59,12 @@ function autoScrolling() {
     }
     if (previousScrollHeight == document.body.scrollHeight) {
         return;
-    }        
+    }
+
     openUnrepliedReplies();
 
     window.scrollTo(0, document.body.scrollHeight);
     previousScrollHeight = document.body.scrollHeight;
-    scrolled++;    
+    scrolled++;
 }
 interval = setInterval(autoScrolling, preferences.scrollWaitTimeMilliseconds);
